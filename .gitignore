@@ -1,0 +1,5 @@
+.ipynb_checkpoints
+__init__.pyc
+plot.pyc
+utils.pyc
+vgg16.pyc
