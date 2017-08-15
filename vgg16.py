@@ -55,12 +55,13 @@ class Vgg16():
     """
 
 
-    def __init__(self):
+    def __init__(self, size = (224, 224), use_batchnorm = False,
+                 include_top = True):
 
         # Path to the VGG 16 image weights. Consider changing these to a local
         # page
         self.FILE_PATH = 'http://files.fast.ai/models/'
-        self.create()
+        self.create(size, use_batchnorm, include_top)
         self.get_classes()
 
 
@@ -70,14 +71,18 @@ class Vgg16():
             Keras model, with a max pooling layer at the end of the layers.
 
             Args:
-                layers (int):   The number of zero padded convolution layers to
-                                be added to the model.
+                in_tensor (tensor): Input tensor from previous layer
 
-                filters (int):  The number of convolution filters to be created
-                                for each layer.
+                layers (int):       The number of zero padded convolution 
+                                    layers to be added to the model.
+
+                filters (int):      The number of convolution filters to be 
+                                    created for each layer.
+
+                name (str):         The name of the convolutional layer
 
             Returns:
-                None
+                Tensor with the convolutional layer
         """
 
         out_tensor = in_tensor
@@ -108,16 +113,22 @@ class Vgg16():
         return out_tensor
 
 
-    def fc_block(self, in_tensor, name):
+    def fc_block(self, in_tensor, use_batchnorm, name):
         """
             Adds a fully connected layer of specifically 4096 neurons to the
             model with a dropout of 0.5.
 
             Args:
-                None
+                in_tensor (tensor):     Input tensor from previous layer
+
+                use_batchnorm (bool):   Specify wether or not to include 
+                                        batchnormalisation in the fully connec-
+                                        ted layer.
+
+                name (str):             The name of the fully connected layer
 
             Returns:
-                None
+                Tensor with the fully connected layer
         """
 
         # Add a fully connected layer with 4096 neurons. This is basically a
@@ -127,6 +138,11 @@ class Vgg16():
         # by the layer, and bias is a bias vector created by the layer.
         # Activation is utilised (relu)
         out_tensor = Dense(4096, activation = 'relu', name = name)(in_tensor)
+
+        # Add batchnormalisation to the layer if specified
+        if use_batchnorm:
+            out_tensor = BatchNormalization()(out_tensor)
+
 
         # We apply Hinton's dropout to the input with a rate of 0.5.
         # Dropout is a technique where randomly selected neurons are ignored
@@ -141,27 +157,41 @@ class Vgg16():
         
         return out_tensor
 
-    def create(self):
+    def create(self, size = (224, 224), use_batchnorm = False,
+               include_top = True):
         """
             Creates the VGG16 network architecture and loads the pretrained
             weights.
 
             Args:
-                None
+                size (tuple):           Pixel size of input images. Default for 
+                                        VGG is (224 x 224).
+
+                use_batchnorm (bool):   Specify wether or not to use batchnorma-
+                                        lisation.
+
+                include_top (bool):     Specify wether or not to include the 
+                                        last fully connected output layer. Will
+                                        have to be specified manually if not.
 
             Returns:
                 None
         """
 
+        # If we use another imagesize, the dense layers have to be retrained
+        if size != (224, 224):
+
+            include_top = False
+
         # Define input layer (hard coded input shape, as VGG16 was trained on 
         # 224x224 images
-        inputs = Input(shape = (3, 224, 224))
+        inputs = Input(shape = (3,) + size)
 
         # Preprocess the images (subtract mean and flip channel). Lambda
         # basically wraps a function (in this case a transformation) as a layer
         # object.
         norm_layer = Lambda(vgg_preprocess,
-                            output_shape = (3, 224, 224),
+                            output_shape = (3,) + size,
                             name = 'norm_layer')(inputs)
 
         # Add the zero padded convolutional layers (13)
@@ -176,8 +206,22 @@ class Vgg16():
         flat_layer = Flatten(name = 'flat_layer')(conv_layer_5)
 
         # We then add two fully connected layers of 4096 neurons 
-        fc_layer_1 = self.fc_block(flat_layer, name = 'fc_layer_1')
-        fc_layer_2 = self.fc_block(fc_layer_1, name = 'fc_layer_2')
+        if use_batchnorm:
+            fc_layer_1 = self.fc_block(flat_layer,
+                                       use_batchnorm = True,
+                                       name = 'fc_layer_1')
+            fc_layer_2 = self.fc_block(fc_layer_1,
+                                       use_batchnorm = True, 
+                                       name = 'fc_layer_2')
+
+        else:
+            fc_layer_1 = self.fc_block(flat_layer,
+                                       use_batchnorm = False,
+                                       name = 'fc_layer_1')
+            fc_layer_2 = self.fc_block(fc_layer_1,
+                                       use_batchnorm = False, 
+                                       name = 'fc_layer_2')
+
 
         # Finally we add the output layer. ImageNet has 1000 categories, meaning
         # our output layer will need 1000 neurons. As standard, we use softmax
@@ -186,12 +230,25 @@ class Vgg16():
                             activation = 'softmax',
                             name = 'prediction')(fc_layer_2)
         
+        # We then specify the output layer and the pretrained weights based on 
+        # wether or not the denselayers are to be included
+        if not include_top:
+            fname = 'vgg16_bn_conv.h5'
+            output_layer = conv_layer_5
+
+        else:
+            output_layer = predictions
+
+            if use_batchnorm:
+                fname = 'vgg16_bn.h5'
+            else:
+                fname = 'vgg16.h5'
+
         # Initialise model
-        self.model = Model(inputs = inputs, outputs = predictions)
+        self.model = Model(inputs = inputs, outputs = output_layer)
         model = self.model
 
         # Finally we load the pretrained weights and cache them
-        fname = 'vgg16.h5'
         model.load_weights(get_file(fname,
                                     self.FILE_PATH + fname,
                                     cache_subdir = 'models'))
