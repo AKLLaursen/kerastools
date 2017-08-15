@@ -2,7 +2,8 @@ import numpy as np
 import json
 
 from keras.models import Model
-from keras.layers import Input, Dense, BatchNormalization, Flatten, Dropout, Lambda
+from keras.layers import (Input, Dense, BatchNormalization, Flatten, Dropout,
+    Lambda)
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.optimizers import Adam
 from keras.utils.data_utils import get_file
@@ -51,9 +52,8 @@ def vgg_preprocess(images):
 
 class Vgg16():
     """
-        A Python implementation of the VGG 16 imagenet model
+        A Python implementation of the VGG 16 Imagenet model
     """
-
 
     def __init__(self, size = (224, 224), use_batchnorm = False,
                  include_top = True):
@@ -157,8 +157,7 @@ class Vgg16():
         
         return out_tensor
 
-    def create(self, size = (224, 224), use_batchnorm = False,
-               include_top = True):
+    def create(self, size, use_batchnorm, include_top = True):
         """
             Creates the VGG16 network architecture and loads the pretrained
             weights.
@@ -246,10 +245,9 @@ class Vgg16():
 
         # Initialise model
         self.model = Model(inputs = inputs, outputs = output_layer)
-        model = self.model
 
-        # Finally we load the pretrained weights and cache them
-        model.load_weights(get_file(fname,
+        # Finally load the pretrained weights and cache them
+        self.model.load_weights(get_file(fname,
                                     self.FILE_PATH + fname,
                                     cache_subdir = 'models'))
 
