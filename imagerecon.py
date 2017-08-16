@@ -7,29 +7,21 @@ from keras.optimizers import Adam
 from keras.utils.data_utils import get_file
 from keras.preprocessing import image
 
-# The Imagerecognition models can be used with both the TensorFlow and the 
-# Theano backend. However, it is set up using Theano. As such, if TensorFlow is 
-# to be used, the Theano image ordering has to set explicitly.
-# Theano: 'th' = 'channels_first'.
-# TensorFlow: 'tf': = 'channels_last'.
-from keras import backend as K
-K.set_image_data_format('channels_first')
 
+class ImageRecognition(object):
+    """
+        Base class to be extended when creating image recognition models
+    """
 
-class ImageRecognition()
-	"""
-		Base class to be extended when creating image recognition models
-	"""
+    def __init__(self):
 
-	def __init__(self)
-
-		# Path to the image weights. Consider changing these to a local
+        # Path to the image weights. Consider changing these to a local
         # page
-		self.FILE_PATH = 'http://files.fast.ai/models/'
-		self.get_classes()
+        self.FILE_PATH = 'http://files.fast.ai/models/'
+        self.get_classes()
 
 
-	def get_classes(self):
+    def get_classes(self):
         """
             Downloads the ImageNet class index file and loads it to 
             self.get_classes unless it is already cached.
@@ -53,7 +45,7 @@ class ImageRecognition()
         self.classes = [class_dict[str(i)][1] for i in range(len(class_dict))]
 
 
-       def get_batches(self, path, gen = image.ImageDataGenerator(),
+    def get_batches(self, path, gen = image.ImageDataGenerator(),
                     shuffle = True, batch_size = 8, class_mode = 'categorical',
                     target_size = (224, 224)):
         """
@@ -106,7 +98,7 @@ class ImageRecognition()
                 An initialised ImageDataGenerator().flow_from_directory() object
                 ready with batches to be passed to training function.
         """
-
+        
         # Note all data is rezised to 224 x 224 pixel images
         return gen.flow_from_directory(path,
                                        target_size = target_size,
@@ -288,33 +280,31 @@ class ImageRecognition()
         return test_batches, self.model.predict_generator(test_batches, test_batches.nb_sample)
 
 
-    def vgg_preprocess(images):
-    """
-        The VGG model awas trained in 2014. The creators subtracted the average
-        of each of the three (R, G, B) channels first, such that the data in
-        each channel has mean zero. The mean is calculated from the original
-        ImageNet training data and is hard codet as provided by the VGG
-        researchers.
-        Further, the model was trained using Caffe, which expected
-        the channels to be in (B, G, R) order, whereas Python by default uses
-        (R, G, B). Thus we also need to reverse the order.
+    def vgg_preprocess(self, images):
+        """
+            The VGG model awas trained in 2014. The creators subtracted the average
+            of each of the three (R, G, B) channels first, such that the data in
+            each channel has mean zero. The mean is calculated from the original
+            ImageNet training data and is hard codet as provided by the VGG
+            researchers.
+            Further, the model was trained using Caffe, which expected
+            the channels to be in (B, G, R) order, whereas Python by default uses
+            (R, G, B). Thus we also need to reverse the order.
 
-        Args:
-            images (ndarray):   A numpy array containing colored images
+            Args:
+                images (ndarray):   A numpy array containing colored images
 
-        Returns:
-            images (ndarray);   A numpy array of the same dimension with the
-                                mean of the imagenet training data subtracted
-                                and the channels reversed.
-    """
-
-    # Hard coded mean as provided by VGG researchers
-    vgg_mean = np.array([123.68, 116.779, 103.939], dtype = np.float32) \
-                 .reshape((3, 1, 1))
-
-    # Subtract the mean
-    images = images - vgg_mean
-
-    # Return images in reverse ordering of channels, i.e. (R, G, B)
-    return images[:, ::-1]
-
+            Returns:
+                images (ndarray);   A numpy array of the same dimension with the
+                                    mean of the imagenet training data subtracted
+                                    and the channels reversed.
+        """
+        
+        # Hard coded mean as provided by VGG researchers
+        vgg_mean = np.array([123.68, 116.779, 103.939], dtype = np.float32).reshape((3, 1, 1))
+        
+        # Subtract the mean
+        images = images - vgg_mean
+        
+        # Return images in reverse ordering of channels, i.e. (R, G, B)
+        return images[:, ::-1]

@@ -1,5 +1,8 @@
-from keras.layers import Input, BatchNormalization, Flatten, Dropout, Lambda
+from keras.models import Model
+from keras.layers import (Input, Dense, BatchNormalization, Flatten, Dropout,
+                          Lambda)
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
+from keras.utils.data_utils import get_file
 
 from imagerecon import ImageRecognition
 
@@ -11,7 +14,9 @@ class Vgg16(ImageRecognition):
 
     def __init__(self, size = (224, 224), use_batchnorm = False,
                  include_top = True):
+        super(Vgg16, self).__init__()
         self.create(size, use_batchnorm, include_top)
+        
 
 
     def conv_block(self, in_tensor, layers, filters, name):
@@ -106,7 +111,7 @@ class Vgg16(ImageRecognition):
         
         return out_tensor
 
-    def create(self, size, use_batchnorm, include_top = True):
+    def create(self, size, use_batchnorm, include_top):
         """
             Creates the VGG16 network architecture and loads the pretrained
             weights.

@@ -1,7 +1,9 @@
+from keras.models import Model
 from keras.layers import Activation, BatchNormalization
 from keras.layers.convolutional import Conv2D, ZeroPadding2D
 from keras.layers.pooling import MaxPooling2D, AveragePooling2D
 from keras.applications.resnet50 import identity_block, conv_block
+from keras.utils.data_utils import get_file
 
 from .imagerecon import ImageRecognition
 
@@ -12,6 +14,7 @@ class Resnet50(ImageRecognition):
     """
 
     def __init__(self, size = (224,224), include_top = True):
+        super(Resnet50, self).__init__()
         self.create(size, include_top)
 
 
