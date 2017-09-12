@@ -1,26 +1,29 @@
+import os
+
 from keras.models import Model
 from keras.layers import (Input, Dense, BatchNormalization, Flatten, Dropout,
                           Lambda)
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.utils.data_utils import get_file
 
-from imagerecon import ImageRecognition
+from kerastools.imagerecon import ImageRecognition
 
 class Vgg16(ImageRecognition):
-    """
+    '''
         A Python implementation of the VGG 16 Imagenet model. Extends 
         ImageRecon.
-    """
+    '''
 
     def __init__(self, size = (224, 224), use_batchnorm = False,
                  include_top = True):
-        super(Vgg16, self).__init__()
+        # Intialise parent class
+        super().__init__()
+        # Create model
         self.create(size, use_batchnorm, include_top)
         
 
-
     def conv_block(self, in_tensor, layers, filters, name):
-        """
+        '''
             Adds a given number of zero padding and convolution layers to a
             Keras model, with a max pooling layer at the end of the layers.
 
@@ -37,7 +40,7 @@ class Vgg16(ImageRecognition):
 
             Returns:
                 Tensor with the convolutional layer
-        """
+        '''
 
         out_tensor = in_tensor
 
@@ -68,7 +71,7 @@ class Vgg16(ImageRecognition):
 
 
     def fc_block(self, in_tensor, use_batchnorm, name):
-        """
+        '''
             Adds a fully connected layer of specifically 4096 neurons to the
             model with a dropout of 0.5.
 
@@ -83,7 +86,7 @@ class Vgg16(ImageRecognition):
 
             Returns:
                 Tensor with the fully connected layer
-        """
+        '''
 
         # Add a fully connected layer with 4096 neurons. This is basically a
         # linear regression of the form output = activation(dot(input, kernel) +
@@ -112,7 +115,7 @@ class Vgg16(ImageRecognition):
         return out_tensor
 
     def create(self, size, use_batchnorm, include_top):
-        """
+        '''
             Creates the VGG16 network architecture and loads the pretrained
             weights.
 
@@ -129,7 +132,7 @@ class Vgg16(ImageRecognition):
 
             Returns:
                 None
-        """
+        '''
 
         # If we use another imagesize, the dense layers have to be retrained
         if size != (224, 224):
@@ -138,13 +141,13 @@ class Vgg16(ImageRecognition):
 
         # Define input layer (hard coded input shape, as VGG16 was trained on 
         # 224x224 images
-        inputs = Input(shape = (3,) + size)
+        inputs = Input(shape = size + (3,))
 
         # Preprocess the images (subtract mean and flip channel). Lambda
         # basically wraps a function (in this case a transformation) as a layer
         # object.
         norm_layer = Lambda(self.vgg_preprocess,
-                            output_shape = (3,) + size,
+                            output_shape = size + (3,),
                             name = 'norm_layer')(inputs)
 
         # Add the zero padded convolutional layers (13)
@@ -186,14 +189,14 @@ class Vgg16(ImageRecognition):
         # We then specify the output layer and the pretrained weights based on 
         # wether or not the denselayers are to be included
         if not include_top:
-            fname = 'vgg16_bn_conv.h5'
+            fname = 'vgg16-no-top.h5'
             output_layer = conv_layer_5
 
         else:
             output_layer = predictions
 
             if use_batchnorm:
-                fname = 'vgg16_bn.h5'
+                fname = 'vgg16-bn.h5'
             else:
                 fname = 'vgg16.h5'
 
@@ -201,6 +204,4 @@ class Vgg16(ImageRecognition):
         self.model = Model(inputs = inputs, outputs = output_layer)
 
         # Finally load the pretrained weights and cache them
-        self.model.load_weights(get_file(fname,
-                                    self.FILE_PATH + fname,
-                                    cache_subdir = 'models'))
+        self.model.load_weights(os.path.join(os.path.dirname(__file__), self.WEIGHT_PATH + fname))

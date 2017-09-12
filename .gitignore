@@ -5,3 +5,4 @@ plot.pyc
 utils.pyc
 vgg16.pyc
 imagerecon.pyc
+weights/

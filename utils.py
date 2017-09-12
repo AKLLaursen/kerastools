@@ -1,9 +1,12 @@
 import bcolz
+import os
 import numpy as np
 
 from keras.preprocessing import image
-from keras.utils import to_categorical
+from keras.utils import to_categorical, convert_all_kernels_in_model
+from keras import backend as K
 
+import tensorflow as tf
 
 def do_clip(arr, mx):
     

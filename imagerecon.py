@@ -9,20 +9,21 @@ from keras.preprocessing import image
 
 
 class ImageRecognition(object):
-    """
+    '''
         Base class to be extended when creating image recognition models
-    """
+    '''
 
     def __init__(self):
 
         # Path to the image weights. Consider changing these to a local
         # page
         self.FILE_PATH = 'http://files.fast.ai/models/'
+        self.WEIGHT_PATH = 'weights/'
         self.get_classes()
 
 
     def get_classes(self):
-        """
+        '''
             Downloads the ImageNet class index file and loads it to 
             self.get_classes unless it is already cached.
 
@@ -31,7 +32,7 @@ class ImageRecognition(object):
 
             Returns:
                 None
-        """
+        '''
 
         # Get the ImageNet class indexes and cache them
         fname = 'imagenet_class_index.json'
@@ -48,7 +49,7 @@ class ImageRecognition(object):
     def get_batches(self, path, gen = image.ImageDataGenerator(),
                     shuffle = True, batch_size = 8, class_mode = 'categorical',
                     target_size = (224, 224)):
-        """
+        '''
             Takes the path to a directory, and generates batches of a
             ugmented/normalized data. Batches are yielded indefinitely, in an
             infinite loop. Basically a wrapper around 
@@ -97,7 +98,7 @@ class ImageRecognition(object):
             Returns:
                 An initialised ImageDataGenerator().flow_from_directory() object
                 ready with batches to be passed to training function.
-        """
+        '''
         
         # Note all data is rezised to 224 x 224 pixel images
         return gen.flow_from_directory(path,
@@ -108,7 +109,7 @@ class ImageRecognition(object):
 
 
     def compile(self, lr = 0.001):
-        """
+        '''
             Compiles the model for training.
 
             Args:
@@ -116,7 +117,7 @@ class ImageRecognition(object):
 
             Returns:
                 None
-        """
+        '''
 
         # Configure the model for training. We use the Adam optimiser presented
         # by https://arxiv.org/abs/1412.6980v8. For loss function we use 
@@ -129,7 +130,7 @@ class ImageRecognition(object):
 
 
     def fit_batch(self, batches, val_batches, epochs):
-        """
+        '''
             Fits the model on data yielded batch-by-batch for a given number of
             epochs, where the batches are generated from a get_batches object.
 
@@ -140,7 +141,7 @@ class ImageRecognition(object):
 
             Returns:
                 None
-        """
+        '''
 
         # Fits the models across the batches
         self.model.fit_generator(batches,
@@ -151,7 +152,7 @@ class ImageRecognition(object):
     
     
     def fit_data(self, train_data, train_labels, val_data, val_labels, epochs, batch_size):
-        """
+        '''
             Fits the model on an entire dataset for a given number of epochs.
 
             Args:
@@ -164,7 +165,7 @@ class ImageRecognition(object):
 
             Returns:
                 None
-        """
+        '''
         self.model.fit(x = train_data,
                        y = train_labels,
                        batch_size = batch_size,
@@ -173,7 +174,7 @@ class ImageRecognition(object):
         
     
     def ft(self, num):
-        """
+        '''
             Replace the last layer of the model with a Dense (fully connected) layer of num neurons.
             Will also lock the weights of all layers except the new layer so that we only learn
             weights for the last layer in subsequent training.
@@ -183,7 +184,7 @@ class ImageRecognition(object):
                 
             Returns:
                 None
-        """
+        '''
         
         model = self.model
         
@@ -204,13 +205,13 @@ class ImageRecognition(object):
     
 
     def finetune(self, batches):
-        """
+        '''
             Modifies the original VGG16 network architecture and updates self.classes for new training data.
             
             Args:
                 batches : A keras.preprocessing.image.ImageDataGenerator object.
                           See definition for get_batches().
-        """
+        '''
         
         # Initialise new model
         self.ft(batches.num_class)
@@ -228,7 +229,7 @@ class ImageRecognition(object):
 
 
     def predict(self, images, details = False):
-        """
+        '''
             Predict the labels of a set of images using the VGG16 model.
 
             Args:
@@ -242,7 +243,7 @@ class ImageRecognition(object):
                                     max confidence.
                 classes (list):     Class labels of the predictions with the max 
                                     confidence.
-        """
+        '''
 
         # Predict the probability of each class for each image
         all_preds = self.model.predict(imgs)
@@ -259,8 +260,8 @@ class ImageRecognition(object):
         return np.array(preds), idxs, classes
         
 
-    def test(self, path, batches):
-        """
+    def test(self, path, batch_size = 8):
+        '''
             Predicts the classes using the trained model on data yielded batch-by-batch.
 
             Args:
@@ -271,17 +272,15 @@ class ImageRecognition(object):
             Returns:
                 test_batches, numpy array(s) of predictions for the test_batches.
     
-        """
-        test_batches = self.get_batches(path,
-                                        shuffle = False,
-                                        batch_size = batch_size,
-                                        class_mode = None)
+        '''
         
-        return test_batches, self.model.predict_generator(test_batches, test_batches.nb_sample)
+        test_batches = get_batches(path, shuffle = False, batch_size = batch_size, class_mode = None)
+        
+        return test_batches, model.predict_generator(test_batches, test_batches.samples, test_batches.batch_size)
 
 
     def vgg_preprocess(self, images):
-        """
+        '''
             The VGG model awas trained in 2014. The creators subtracted the average
             of each of the three (R, G, B) channels first, such that the data in
             each channel has mean zero. The mean is calculated from the original
@@ -298,10 +297,10 @@ class ImageRecognition(object):
                 images (ndarray);   A numpy array of the same dimension with the
                                     mean of the imagenet training data subtracted
                                     and the channels reversed.
-        """
+        '''
         
         # Hard coded mean as provided by VGG researchers
-        vgg_mean = np.array([123.68, 116.779, 103.939], dtype = np.float32).reshape((3, 1, 1))
+        vgg_mean = np.array([123.68, 116.779, 103.939], dtype = np.float32).reshape((1, 1, 3))
         
         # Subtract the mean
         images = images - vgg_mean
