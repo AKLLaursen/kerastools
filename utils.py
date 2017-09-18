@@ -23,6 +23,16 @@ def get_batches(dirname, gen = image.ImageDataGenerator(), shuffle = True,
                                    class_mode = class_mode,
                                    shuffle = shuffle, batch_size = batch_size)
 
+def to_plot(img):
+    return np.rollaxis(img, 0, 1).astype(np.uint8)
+
+def plot(img):
+    plt.imshow(to_plot(img))
+
+def get_data(path, target_size = (224,224)):
+    batches = get_batches(path, shuffle = False, batch_size = 1, class_mode = None, target_size = target_size)
+    
+    return np.concatenate([batches.next() for i in range(batches.samples)])
 
 def onehot_encode(x):
     return to_categorical(x)
@@ -37,6 +47,11 @@ def save_array(fname, arr):
 def load_array(fname):
     return bcolz.open(fname)[:]
 
+def split_at(model, layer_type):
+    layers = model.layers
+    layer_idx = [index for index,layer in enumerate(layers)
+                 if type(layer) is layer_type][-1]
+    return layers[:layer_idx+1], layers[layer_idx+1:]
 
 def get_classes(path):
     
