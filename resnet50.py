@@ -3,7 +3,7 @@ import os
 from keras.models import Model
 from keras.layers import Input, Lambda, Flatten, Activation, BatchNormalization, Dense, add
 from keras.layers.convolutional import Conv2D, ZeroPadding2D
-from keras.layers.pooling import MaxPooling2D, AveragePooling2D
+from keras.layers.pooling import MaxPooling2D, GlobalMaxPooling2D, GlobalAveragePooling2D, AveragePooling2D
 from keras.utils.data_utils import get_file
 
 from .imagerecon import ImageRecognition
@@ -176,25 +176,18 @@ class Resnet50(ImageRecognition):
         x = self.conv_block(x, 3, [512, 512, 2048], stage = 5, block = 'a')
         x = self.identity_block(x, 3, [512, 512, 2048], stage = 5, block = 'b')
         x = self.identity_block(x, 3, [512, 512, 2048], stage = 5, block = 'c')
-        x = AveragePooling2D((7, 7), name = 'avg_pool')(x)
 
         # We then specify the output layer and the pretrained weights based on 
         # wether or not the denselayers are to be included
         if include_top:
             
+            x = AveragePooling2D((7, 7), name='avg_pool')(x)
             x = Flatten()(x)
             x = Dense(1000, activation = 'softmax', name = 'fc1000')(x)
 
             fname = 'resnet50.h5'
 
         else:
-            
-            if pooling == 'avg':
-                x = GlobalAveragePooling2D()(x)
-                
-            elif pooling == 'max':
-                
-                x = GlobalMaxPooling2D()(x)
             
             fname = 'resnet50-no-top.h5'
 
