@@ -58,10 +58,10 @@ class Vgg16(ImageRecognition):
             # linear unit (relu) activation, which is simply max(0, x). (This
             # is our non-liniarity)
             out_tensor = Conv2D(filters,
-                               kernel_size = (3, 3),
-                               strides = (1, 1),
-                               activation = 'relu',
-                               name = name + '_' + str(i))(out_tensor)
+                                kernel_size = (3, 3),
+                                strides = (1, 1),
+                                activation = 'relu',
+                                name = name + '_' + str(i))(out_tensor)
 
         # Add a final max pooling layer. We down scale by a factor of 2 x 2, and
         # move with a 2 x 2 stride.

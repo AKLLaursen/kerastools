@@ -8,6 +8,12 @@ from keras import backend as K
 
 import tensorflow as tf
 
+def limit_mem():
+    K.get_session().close()
+    cfg = K.tf.ConfigProto()
+    cfg.gpu_options.allow_growth = True
+    K.set_session(K.tf.Session(config = cfg))
+
 def do_clip(arr, mx):
     
     clipped = np.clip(arr, (1 - mx) / 1, mx)
@@ -29,7 +35,7 @@ def to_plot(img):
 def plot(img):
     plt.imshow(to_plot(img))
 
-def get_data(path, target_size = (224,224)):
+def get_data(path, target_size = (224, 224)):
     batches = get_batches(path, shuffle = False, batch_size = 1, class_mode = None, target_size = target_size)
     
     return np.concatenate([batches.next() for i in range(batches.samples)])
@@ -68,12 +74,9 @@ class MixIterator(object):
     def __init__(self, iters):
         
         self.iters = iters
-        self.multi = type(iters) is list
-        
-        if self.multi:
-            self.N = sum([it[0].N for it in self.iters])
-        else:
-            self.N = sum([it.N for it in self.iters])
+        self.n = sum([it.n for it in self.iters])
+        self.batch_size = sum([it.batch_size for it in self.iters])
+        self.steps_per_epoch = int(self.n / self.batch_size)
 
     def reset(self):
         for it in self.iters: it.reset()
@@ -81,22 +84,11 @@ class MixIterator(object):
     def __iter__(self):
         return self
 
-    def next(self, *args, **kwargs):
+    def __next__(self, *args, **kwargs):
         
-        if self.multi:
-            
-            nexts = [[next(it) for it in o] for o in self.iters]
-            
-            n0 = np.concatenate([n[0] for n in nexts])
-            n1 = np.concatenate([n[1] for n in nexts])
-            
-            return (n0, n1)
+        nexts = [next(it) for it in self.iters]
         
-        else:
-            
-            nexts = [next(it) for it in self.iters]
-            
-            n0 = np.concatenate([n[0] for n in nexts])
-            n1 = np.concatenate([n[1] for n in nexts])
-            
-            return (n0, n1)
+        n0 = np.concatenate([n[0] for n in nexts])
+        n1 = np.concatenate([n[1] for n in nexts])
+        
+        return (n0, n1)
