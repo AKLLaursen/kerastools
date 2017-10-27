@@ -1,4 +1,6 @@
-from matplotlib import pyplot as plt
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patheffects as PathEffects
 
 def plots(ims, figsize = (12, 6), rows = 1, interp = False, titles = None):
     
@@ -46,3 +48,26 @@ def plot_confusion_matrix(cm, classes, normalize = False,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+
+    
+def autolabel(plt, fmt='%.2f'):
+    rects = plt.patches
+    ax = rects[0].axes
+    y_bottom, y_top = ax.get_ylim()
+    y_height = y_top - y_bottom
+    for rect in rects:
+        height = rect.get_height()
+        if height / y_height > 0.95:
+            label_position = height - (y_height * 0.06)
+        else:
+            label_position = height + (y_height * 0.01)
+        txt = ax.text(rect.get_x() + rect.get_width()/2., label_position,
+                fmt % height, ha='center', va='bottom')
+        txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground='w')])
+
+        
+def column_chart(lbls, vals, val_lbls='%.2f'):
+    n = len(lbls)
+    p = plt.bar(np.arange(n), vals)
+    plt.xticks(np.arange(n), lbls)
+    if val_lbls: autolabel(p, val_lbls)
