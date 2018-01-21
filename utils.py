@@ -2,6 +2,7 @@ import bcolz
 import os
 import numpy as np
 import threading
+import matplotlib.pyplot as plt
 
 from keras.preprocessing import image
 from keras.utils import to_categorical, convert_all_kernels_in_model
@@ -39,6 +40,18 @@ def to_plot(img):
 
 def plot(img):
     plt.imshow(to_plot(img))
+
+    
+def plot_multi(im, dim = (4,4), figsize = (6,6), **kwargs ):
+    
+    plt.figure(figsize = figsize)
+    
+    for i, img in enumerate(im):
+        plt.subplot(*((dim) + (i + 1,)))
+        plt.imshow(img, **kwargs)
+        plt.axis('off')
+        
+    plt.tight_layout()
 
 
 def get_data(path, target_size = (224, 224)):
