@@ -3,5 +3,5 @@
 # to be used, the TensorFlow image ordering has to set explicitly.
 # Theano: 'th' = 'channels_first'.
 # TensorFlow: 'tf': = 'channels_last'.
-from keras import backend as K
+from tensorflow.python.keras import backend as K
 K.set_image_data_format('channels_last')

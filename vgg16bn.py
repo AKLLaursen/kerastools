@@ -1,10 +1,10 @@
 import os
 
-from keras.models import Model
-from keras.layers import (Input, Dense, BatchNormalization, Flatten, Dropout,
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.layers import (Input, Dense, BatchNormalization, Flatten, Dropout,
                           Lambda)
-from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
-from keras.utils.data_utils import get_file
+from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D
+from tensorflow.python.keras.utils import get_file
 
 from kerastools.imagerecon import ImageRecognition
 
@@ -135,9 +135,9 @@ class Vgg16(ImageRecognition):
         '''
 
         # If we use another imagesize, the dense layers have to be retrained
-        if size != (224, 224):
+        #if size != (224, 224):
 
-            include_top = False
+        #    include_top = False
 
         # Define input layer (hard coded input shape, as VGG16 was trained on 
         # 224x224 images
@@ -196,7 +196,7 @@ class Vgg16(ImageRecognition):
             output_layer = predictions
 
             if use_batchnorm:
-                fname = 'vgg16-bn.h5'
+                fname = 'vgg16_bn.h5'
             else:
                 fname = 'vgg16.h5'
 

@@ -1,11 +1,11 @@
 import numpy as np
 import json
 
-from keras.models import Model
-from keras.layers import Dense
-from keras.optimizers import Adam
-from keras.utils.data_utils import get_file
-from keras.preprocessing import image
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.optimizers import Adam
+from tensorflow.python.keras.utils import get_file
+from tensorflow.python.keras.preprocessing import image
 
 
 class ImageRecognition(object):
